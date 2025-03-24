@@ -44,8 +44,6 @@
 package main
 
 import (
-	"log"
-	"net/http"
 	"test/SuscriberMQTT"
 )
 
@@ -58,12 +56,12 @@ func main() {
 	// routes.RegisterRoutes()
 
 	// Levantamos el servidor HTTP en un goroutine
-	go func() {
-		log.Println("Iniciando servidor HTTP en el puerto 8080...")
-		if err := http.ListenAndServe(":8080", nil); err != nil {
-			log.Fatalf("Error al iniciar el servidor: %v", err)
-		}
-	}()
+	// go func() {
+	// 	log.Println("Iniciando servidor HTTP en el puerto 8080...")
+	// 	if err := http.ListenAndServe(":7080", nil); err != nil {
+	// 		log.Fatalf("Error al iniciar el servidor: %v", err)
+	// 	}
+	// }()
 
 	
 	select {}

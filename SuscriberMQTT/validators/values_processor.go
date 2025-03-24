@@ -1,6 +1,7 @@
 package validators
 
 import (
+	"fmt"
 	"test/models"
 )
 
@@ -18,20 +19,32 @@ func validateHumidity(humidity float32) float32 {
 }
 
 func ValidateData(dataIoTLocal, dataIoT *models.DataIoT) {
+
+	fmt.Println("Está entrando a las verificaciones")
 	
-	// Verificaciones
+	// Verificar id
 	if dataIoTLocal.IdPlot > 0 && dataIoTLocal.IdPlot != dataIoT.IdPlot {
 		dataIoT.IdPlot = dataIoTLocal.IdPlot
 	}
 
-	if validateTemperature(dataIoTLocal.Temperature) && dataIoT.Temperature == 0 {
+	// Verificar temperatura
+	if validateTemperature(dataIoTLocal.Temperature) && (dataIoT.Temperature != 0 || dataIoT.Temperature == 0) {
 		dataIoT.Temperature = dataIoTLocal.Temperature
 	}
 
+	// Verificar humedad
 	dataIoTLocal.Humidity = validateHumidity(dataIoTLocal.Humidity)
 	
 	if dataIoT.Humidity == 0 {
 		dataIoT.Humidity = dataIoTLocal.Humidity
 	}
+
+	// Verificar la luz solar
+	dataIoT.Sun = dataIoTLocal.Sun
+
+	// Verificar la calidad del aire
+	dataIoT.AirQuality = dataIoTLocal.AirQuality
+
+	
 
 }

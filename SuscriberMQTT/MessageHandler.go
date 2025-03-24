@@ -26,6 +26,12 @@ func processSensorData(data []byte) {
 		fmt.Errorf("Error al deserializar el mensaje: %v", err)
 	}
 
+	fmt.Printf("Id de la parcela: %v\n", dataIoTLocal.IdPlot)
+	fmt.Printf("Temperatura: %v\n", dataIoTLocal.Temperature)
+	fmt.Printf("Calidad del aire: %v\n", dataIoTLocal.AirQuality)
+	fmt.Printf("Humedad: %v\n", dataIoTLocal.Humidity)
+	fmt.Printf("Luz: %v\n", dataIoTLocal.Sun)
+
 	validators.ValidateData(&dataIoTLocal, dataIoT)
 
 	verifyValues()
@@ -34,14 +40,8 @@ func processSensorData(data []byte) {
 func verifyValues() {
 
 	if dataIoT.IdPlot != 0 && (dataIoT.Temperature != 0 || dataIoT.Temperature == 0) && dataIoT.AirQuality != 0 && (dataIoT.Humidity != 0 || dataIoT.Humidity == 0) {
-		
-		fmt.Printf("Id de la parcela: %v\n", dataIoT.IdPlot)
-		fmt.Printf("Temperatura: %v\n", dataIoT.Temperature)
-		fmt.Printf("Calidad del aire: %v\n", dataIoT.AirQuality)
-		fmt.Printf("Humedad: %v\n", dataIoT.Humidity)
 
-		// Pendiente
-		dataIoT.Sun = 50.02
+		fmt.Println("Entrando para hacer la peticion")
 
 		data, err := json.Marshal(dataIoT)
 
@@ -49,12 +49,12 @@ func verifyValues() {
 			fmt.Errorf("Error", err.Error())
 		}
 
-
 		// Hacer la petición a la API
 		request.Fetch(data)
 
 		// Enviar al ws
 		
+
 	}
 
 }
