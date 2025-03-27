@@ -6,15 +6,18 @@ import (
 	"os"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/gorilla/websocket"
 	"github.com/subosito/gotenv"
 )
 
 type Suscriber struct {
-	client   mqtt.Client
-	topic    string
+	client         mqtt.Client
+	topic          string
+	messageHandler mqtt.MessageHandler
+	wsConnection   *websocket.Conn
 }
 
-func NewSuscriberMQTT() *Suscriber {
+func NewSuscriberMQTT(wsConnection *websocket.Conn) *Suscriber {
 
 	// Cargar variables de entorno
 	err := gotenv.Load()
@@ -25,12 +28,16 @@ func NewSuscriberMQTT() *Suscriber {
 	brokerURL := os.Getenv("MQTTBROKER")
 	topic := os.Getenv("TOPIC")
 
-	client := CreateClient(brokerURL)
+	suscriber := &Suscriber{}
 
-	suscriber := &Suscriber{
-		client: client,
-		topic:  topic,
-	}
+	var messageHandler mqtt.MessageHandler = suscriber.HandleMessage
+
+	client := CreateClient(brokerURL, suscriber.messageHandler)
+
+	suscriber.client = client
+	suscriber.topic = topic
+	suscriber.messageHandler = messageHandler
+	suscriber.wsConnection = wsConnection
 
 	suscriber.Subscribe()
 
@@ -39,11 +46,16 @@ func NewSuscriberMQTT() *Suscriber {
 }
 
 func (s *Suscriber) Subscribe() {
-
-	if token := s.client.Subscribe(s.topic, 0, messageHandler); token.Wait() && token.Error() != nil {
+	if token := s.client.Subscribe(s.topic, 0, s.messageHandler); token.Wait() && token.Error() != nil {
 		log.Fatalf("Error al suscribirse al tópico: %v", token.Error())
 	}
 
 	fmt.Println("Suscrito al tópico MQTT. Esperando mensajes...")
 
+}
+
+func (s *Suscriber) HandleMessage(client mqtt.Client, msg mqtt.Message) {
+	fmt.Printf("Mensaje recibido en %s: %s\n", msg.Topic(), msg.Payload())
+
+	processSensorData(msg.Payload(), s.wsConnection)
 }

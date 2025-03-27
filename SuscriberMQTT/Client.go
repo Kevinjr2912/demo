@@ -5,8 +5,7 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
-// CreateClient crea y devuelve un cliente MQTT
-func CreateClient(brokerURL string) mqtt.Client {
+func CreateClient(brokerURL string, messageHandler mqtt.MessageHandler) mqtt.Client {
 	
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(brokerURL)

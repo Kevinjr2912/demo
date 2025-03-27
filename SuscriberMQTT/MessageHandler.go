@@ -3,45 +3,38 @@ package suscribermqtt
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"test/SuscriberMQTT/validators"
 	"test/models"
-	"test/request"
 
-	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/gorilla/websocket"
 )
 
 var dataIoT = &models.DataIoT{}
 
-var messageHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
-	fmt.Printf("Mensaje recibido en %s: %s\n", msg.Topic(), msg.Payload())
-
-	// Procesar los datos de los sensores
-	processSensorData(msg.Payload())
-}
-
-func processSensorData(data []byte) {
+func processSensorData(data []byte, ws *websocket.Conn) {
 	var dataIoTLocal models.DataIoT
 
 	if err := json.Unmarshal(data, &dataIoTLocal); err != nil {
 		fmt.Errorf("Error al deserializar el mensaje: %v", err)
+		return
 	}
 
-	validators.ValidateData(&dataIoTLocal, dataIoT)
+	fmt.Printf("Id de la parcela: %v\n", dataIoTLocal.IdPlot)
+	fmt.Printf("Temperatura: %v\n", dataIoTLocal.Temperature)
+	fmt.Printf("Calidad del aire: %v\n", dataIoTLocal.AirQuality)
+	fmt.Printf("Humedad: %v\n", dataIoTLocal.Humidity)
+	fmt.Printf("Luz: %v\n", dataIoTLocal.Sun)
 
-	verifyValues()
+	validators.ValidateData(&dataIoTLocal, dataIoT)
+	verifyValues(ws)
 }
 
-func verifyValues() {
+func verifyValues(ws *websocket.Conn) {
 
 	if dataIoT.IdPlot != 0 && (dataIoT.Temperature != 0 || dataIoT.Temperature == 0) && dataIoT.AirQuality != 0 && (dataIoT.Humidity != 0 || dataIoT.Humidity == 0) {
-		
-		fmt.Printf("Id de la parcela: %v\n", dataIoT.IdPlot)
-		fmt.Printf("Temperatura: %v\n", dataIoT.Temperature)
-		fmt.Printf("Calidad del aire: %v\n", dataIoT.AirQuality)
-		fmt.Printf("Humedad: %v\n", dataIoT.Humidity)
 
-		// Pendiente
-		dataIoT.Sun = 50.02
+		fmt.Println("Process exit")
 
 		data, err := json.Marshal(dataIoT)
 
@@ -49,12 +42,17 @@ func verifyValues() {
 			fmt.Errorf("Error", err.Error())
 		}
 
-
 		// Hacer la petición a la API
-		request.Fetch(data)
+		//request.Fetch(data)
 
-		// Enviar al ws
-		
+		// Enviar al cliente por medio del protocolo ws
+		err = ws.WriteMessage(websocket.TextMessage, data)
+
+		if err != nil {
+			log.Println("write:", err)
+			return
+		}
+
 	}
 
 }
